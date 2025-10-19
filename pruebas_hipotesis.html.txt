@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pruebas de Hipótesis de Una Muestra - Interactivo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.6/jstat.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .result-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .decision {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        
+        .reject {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .no-reject {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        #plot {
+            margin-top: 30px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            color: #d84315;
+            margin-bottom: 10px;
+        }
+        
+        .formula {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .example-box h4 {
+            color: #e91e63;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Pruebas de Hipótesis de Una Muestra</h1>
+        <p class="subtitle">Dr. Alejandro Alfredo Chávez Medrano</p>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('z-test')">Prueba Z (σ conocida)</button>
+            <button class="tab" onclick="showTab('t-test')">Prueba t (σ desconocida)</button>
+            <button class="tab" onclick="showTab('prop-test')">Prueba de Proporción</button>
+            <button class="tab" onclick="showTab('theory')">Teoría y Conceptos</button>
+        </div>
+        
+        <!-- Prueba Z -->
+        <div id="z-test" class="content active">
+            <div class="info-box">
+                <h4>📌 Cuándo usar la prueba Z:</h4>
+                <ul>
+                    <li>La desviación estándar poblacional (σ) es <strong>conocida</strong></li>
+                    <li>La población es normal o n ≥ 30 (TCL)</li>
+                    <li>Estamos probando hipótesis sobre la media poblacional μ</li>
+                </ul>
+                <div class="formula">Z = (x̄ - μ₀) / (σ/√n)</div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Tipo de prueba:</label>
+                    <select id="z-tail">
+                        <option value="two">Dos colas (≠)</option>
+                        <option value="right">Cola derecha (>)</option>
+                        <option value="left">Cola izquierda (<)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nivel de significancia (α):</label>
+                    <input type="number" id="z-alpha" value="0.05" step="0.01" min="0.001" max="0.999">
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Media hipotética (μ₀):</label>
+                    <input type="number" id="z-mu0" value="200" step="any">
+                </div>
+                <div class="form-group">
+                    <label>Media muestral (x̄):</label>
+                    <input type="number" id="z-xbar" value="203.5" step="any">
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Desviación estándar poblacional (σ):</label>
+                    <input type="number" id="z-sigma" value="16" step="any" min="0.001">
+                </div>
+                <div class="form-group">
+                    <label>Tamaño de muestra (n):</label>
+                    <input type="number" id="z-n" value="50" step="1" min="2">
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateZ()">🎯 Calcular Prueba Z</button>
+            
+            <div id="z-results" class="results"></div>
+            <div id="z-plot"></div>
+            
+            <div class="example-box">
+                <h4>💡 Ejemplo ilustrativo:</h4>
+                <p>La producción semanal de escritorios sigue una distribución normal con μ=200 y σ=16. 
+                   Después de implementar nuevos métodos, una muestra de 50 semanas dio x̄=203.5. 
+                   ¿Ha cambiado la producción? (α=0.01)</p>
+            </div>
+        </div>
+        
+        <!-- Prueba t -->
+        <div id="t-test" class="content">
+            <div class="info-box">
+                <h4>📌 Cuándo usar la prueba t:</h4>
+                <ul>
+                    <li>La desviación estándar poblacional (σ) es <strong>desconocida</strong></li>
+                    <li>Usamos la desviación estándar muestral (s)</li>
+                    <li>La población es aproximadamente normal</li>
+                </ul>
+                <div class="formula">t = (x̄ - μ₀) / (s/√n) con gl = n-1</div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Tipo de prueba:</label>
+                    <select id="t-tail">
+                        <option value="two">Dos colas (≠)</option>
+                        <option value="right">Cola derecha (>)</option>
+                        <option value="left">Cola izquierda (<)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nivel de significancia (α):</label>
+                    <input type="number" id="t-alpha" value="0.01" step="0.01" min="0.001" max="0.999">
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Media hipotética (μ₀):</label>
+                    <input type="number" id="t-mu0" value="60" step="any">
+                </div>
+                <div class="form-group">
+                    <label>Media muestral (x̄):</label>
+                    <input type="number" id="t-xbar" value="56.42" step="any">
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Desviación estándar muestral (s):</label>
+                    <input type="number" id="t-s" value="10" step="any" min="0.001">
+                </div>
+                <div class="form-group">
+                    <label>Tamaño de muestra (n):</label>
+                    <input type="number" id="t-n" value="26" step="1" min="2">
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateT()">🎯 Calcular Prueba t</button>
+            
+            <div id="t-results" class="results"></div>
+            <div id="t-plot"></div>
+            
+            <div class="example-box">
+                <h4>💡 Ejemplo ilustrativo:</h4>
+                <p>El costo promedio para procesar un reclamo era $60. Después de medidas de reducción de costos,
+                   una muestra de 26 reclamos dio x̄=$56.42 con s=$10. ¿Es el costo ahora menor a $60? (α=0.01)</p>
+            </div>
+        </div>
+        
+        <!-- Prueba de Proporción -->
+        <div id="prop-test" class="content">
+            <div class="info-box">
+                <h4>📌 Cuándo usar la prueba de proporción:</h4>
+                <ul>
+                    <li>Datos categóricos (éxito/fracaso)</li>
+                    <li>np₀ ≥ 5 y n(1-p₀) ≥ 5</li>
+                    <li>Muestra aleatoria e independiente</li>
+                </ul>
+                <div class="formula">Z = (p̂ - p₀) / √(p₀(1-p₀)/n)</div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Tipo de prueba:</label>
+                    <select id="prop-tail">
+                        <option value="two">Dos colas (≠)</option>
+                        <option value="right">Cola derecha (>)</option>
+                        <option value="left">Cola izquierda (<)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nivel de significancia (α):</label>
+                    <input type="number" id="prop-alpha" value="0.05" step="0.01" min="0.001" max="0.999">
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Proporción hipotética (p₀):</label>
+                    <input type="number" id="prop-p0" value="0.80" step="0.01" min="0" max="1">
+                </div>
+                <div class="form-group">
+                    <label>Proporción muestral (p̂):</label>
+                    <input type="number" id="prop-phat" value="0.775" step="0.001" min="0" max="1">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Tamaño de muestra (n):</label>
+                <input type="number" id="prop-n" value="2000" step="1" min="10">
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateProp()">🎯 Calcular Prueba de Proporción</button>
+            
+            <div id="prop-results" class="results"></div>
+            <div id="prop-plot"></div>
+            
+            <div class="example-box">
+                <h4>💡 Ejemplo ilustrativo:</h4>
+                <p>Un candidato necesita al menos 80% del voto en el norte para ser reelecto. 
+                   Una encuesta de 2000 votantes mostró que 1550 (77.5%) planean votar por él. 
+                   ¿Tiene posibilidades de ser reelecto? (α=0.05)</p>
+            </div>
+        </div>
+        
+        <!-- Teoría -->
+        <div id="theory" class="content">
+            <h2>📚 Conceptos Fundamentales</h2>
+            
+            <div class="result-item">
+                <h3>Hipótesis Nula (H₀) vs Alternativa (H₁)</h3>
+                <ul>
+                    <li><strong>H₀:</strong> Afirmación sobre el parámetro que se presume verdadera</li>
+                    <li><strong>H₁:</strong> Lo que queremos demostrar (tiene la carga de la prueba)</li>
+                    <li>La igualdad siempre está en H₀ (=, ≤, ≥)</li>
+                    <li>La desigualdad estricta está en H₁ (≠, <, >)</li>
+                </ul>
+            </div>
+            
+            <div class="result-item">
+                <h3>Errores en las Pruebas de Hipótesis</h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #667eea; color: white;">
+                        <th style="padding: 10px; border: 1px solid #ddd;">Decisión</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">H₀ es verdadera</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">H₀ es falsa</th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>No rechazar H₀</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; background: #c8e6c9;">✓ Decisión correcta</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; background: #ffcdd2;">Error Tipo II (β)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Rechazar H₀</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd; background: #ffcdd2;">Error Tipo I (α)</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; background: #c8e6c9;">✓ Decisión correcta (Potencia: 1-β)</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="result-item">
+                <h3>Valor p (p-value)</h3>
+                <p>El valor p es la probabilidad de observar un resultado tan extremo o más extremo que el observado, 
+                   asumiendo que H₀ es verdadera.</p>
+                <ul>
+                    <li>Si p-valor < α → Rechazar H₀</li>
+                    <li>Si p-valor ≥ α → No rechazar H₀</li>
+                    <li>Cuanto menor es el p-valor, más fuerte es la evidencia contra H₀</li>
+                </ul>
+            </div>
+            
+            <div class="result-item">
+                <h3>Los 5 Pasos del Proceso</h3>
+                <ol>
+                    <li><strong>Plantear las hipótesis:</strong> H₀ y H₁</li>
+                    <li><strong>Seleccionar α:</strong> Nivel de significancia (típicamente 0.01, 0.05, 0.10)</li>
+                    <li><strong>Elegir el estadístico:</strong> Z, t, o proporción</li>
+                    <li><strong>Regla de decisión:</strong> Establecer región crítica</li>
+                    <li><strong>Conclusión:</strong> Rechazar o no rechazar H₀</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        function calculateZ() {
+            const tail = document.getElementById('z-tail').value;
+            const alpha = parseFloat(document.getElementById('z-alpha').value);
+            const mu0 = parseFloat(document.getElementById('z-mu0').value);
+            const xbar = parseFloat(document.getElementById('z-xbar').value);
+            const sigma = parseFloat(document.getElementById('z-sigma').value);
+            const n = parseInt(document.getElementById('z-n').value);
+            
+            // Calculate Z statistic
+            const se = sigma / Math.sqrt(n);
+            const z = (xbar - mu0) / se;
+            
+            // Calculate critical values and p-value
+            let criticalValues, pValue;
+            if (tail === 'two') {
+                const zCrit = jStat.normal.inv(1 - alpha/2, 0, 1);
+                criticalValues = `±${zCrit.toFixed(4)}`;
+                pValue = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+            } else if (tail === 'right') {
+                const zCrit = jStat.normal.inv(1 - alpha, 0, 1);
+                criticalValues = zCrit.toFixed(4);
+                pValue = 1 - jStat.normal.cdf(z, 0, 1);
+            } else {
+                const zCrit = jStat.normal.inv(alpha, 0, 1);
+                criticalValues = zCrit.toFixed(4);
+                pValue = jStat.normal.cdf(z, 0, 1);
+            }
+            
+            const reject = pValue < alpha;
+            
+            // Display results
+            const resultsDiv = document.getElementById('z-results');
+            resultsDiv.innerHTML = `
+                <div class="result-item">
+                    <h3>Hipótesis</h3>
+                    <div>H₀: μ ${tail === 'two' ? '=' : tail === 'right' ? '≤' : '≥'} ${mu0}</div>
+                    <div>H₁: μ ${tail === 'two' ? '≠' : tail === 'right' ? '>' : '<'} ${mu0}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Estadístico de Prueba</h3>
+                    <div class="result-value">Z = ${z.toFixed(4)}</div>
+                    <div>Error estándar: ${se.toFixed(4)}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valores Críticos</h3>
+                    <div class="result-value">Z crítico = ${criticalValues}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valor p</h3>
+                    <div class="result-value">${pValue.toFixed(6)}</div>
+                </div>
+                <div class="decision ${reject ? 'reject' : 'no-reject'}">
+                    <strong>${reject ? '⚠️ RECHAZAR H₀' : '✓ NO RECHAZAR H₀'}</strong><br>
+                    ${reject ? 
+                        'Hay evidencia estadística significativa para rechazar la hipótesis nula.' : 
+                        'No hay suficiente evidencia para rechazar la hipótesis nula.'}
+                </div>
+            `;
+            resultsDiv.classList.add('show');
+            
+            // Plot the distribution
+            plotDistribution('z-plot', z, alpha, tail, 'normal');
+        }
+        
+        function calculateT() {
+            const tail = document.getElementById('t-tail').value;
+            const alpha = parseFloat(document.getElementById('t-alpha').value);
+            const mu0 = parseFloat(document.getElementById('t-mu0').value);
+            const xbar = parseFloat(document.getElementById('t-xbar').value);
+            const s = parseFloat(document.getElementById('t-s').value);
+            const n = parseInt(document.getElementById('t-n').value);
+            const df = n - 1;
+            
+            // Calculate t statistic
+            const se = s / Math.sqrt(n);
+            const t = (xbar - mu0) / se;
+            
+            // Calculate critical values and p-value
+            let criticalValues, pValue;
+            if (tail === 'two') {
+                const tCrit = jStat.studentt.inv(1 - alpha/2, df);
+                criticalValues = `±${tCrit.toFixed(4)}`;
+                pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+            } else if (tail === 'right') {
+                const tCrit = jStat.studentt.inv(1 - alpha, df);
+                criticalValues = tCrit.toFixed(4);
+                pValue = 1 - jStat.studentt.cdf(t, df);
+            } else {
+                const tCrit = jStat.studentt.inv(alpha, df);
+                criticalValues = tCrit.toFixed(4);
+                pValue = jStat.studentt.cdf(t, df);
+            }
+            
+            const reject = pValue < alpha;
+            
+            // Display results
+            const resultsDiv = document.getElementById('t-results');
+            resultsDiv.innerHTML = `
+                <div class="result-item">
+                    <h3>Hipótesis</h3>
+                    <div>H₀: μ ${tail === 'two' ? '=' : tail === 'right' ? '≤' : '≥'} ${mu0}</div>
+                    <div>H₁: μ ${tail === 'two' ? '≠' : tail === 'right' ? '>' : '<'} ${mu0}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Estadístico de Prueba</h3>
+                    <div class="result-value">t = ${t.toFixed(4)}</div>
+                    <div>Grados de libertad: ${df}</div>
+                    <div>Error estándar: ${se.toFixed(4)}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valores Críticos</h3>
+                    <div class="result-value">t crítico = ${criticalValues}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valor p</h3>
+                    <div class="result-value">${pValue.toFixed(6)}</div>
+                </div>
+                <div class="decision ${reject ? 'reject' : 'no-reject'}">
+                    <strong>${reject ? '⚠️ RECHAZAR H₀' : '✓ NO RECHAZAR H₀'}</strong><br>
+                    ${reject ? 
+                        'Hay evidencia estadística significativa para rechazar la hipótesis nula.' : 
+                        'No hay suficiente evidencia para rechazar la hipótesis nula.'}
+                </div>
+            `;
+            resultsDiv.classList.add('show');
+            
+            // Plot the distribution
+            plotDistribution('t-plot', t, alpha, tail, 't', df);
+        }
+        
+        function calculateProp() {
+            const tail = document.getElementById('prop-tail').value;
+            const alpha = parseFloat(document.getElementById('prop-alpha').value);
+            const p0 = parseFloat(document.getElementById('prop-p0').value);
+            const phat = parseFloat(document.getElementById('prop-phat').value);
+            const n = parseInt(document.getElementById('prop-n').value);
+            
+            // Check conditions
+            const np0 = n * p0;
+            const n1p0 = n * (1 - p0);
+            
+            if (np0 < 5 || n1p0 < 5) {
+                alert('⚠️ Advertencia: Las condiciones np₀ ≥ 5 y n(1-p₀) ≥ 5 no se cumplen. Los resultados pueden no ser confiables.');
+            }
+            
+            // Calculate Z statistic
+            const se = Math.sqrt(p0 * (1 - p0) / n);
+            const z = (phat - p0) / se;
+            
+            // Calculate critical values and p-value
+            let criticalValues, pValue;
+            if (tail === 'two') {
+                const zCrit = jStat.normal.inv(1 - alpha/2, 0, 1);
+                criticalValues = `±${zCrit.toFixed(4)}`;
+                pValue = 2 * (1 - jStat.normal.cdf(Math.abs(z), 0, 1));
+            } else if (tail === 'right') {
+                const zCrit = jStat.normal.inv(1 - alpha, 0, 1);
+                criticalValues = zCrit.toFixed(4);
+                pValue = 1 - jStat.normal.cdf(z, 0, 1);
+            } else {
+                const zCrit = jStat.normal.inv(alpha, 0, 1);
+                criticalValues = zCrit.toFixed(4);
+                pValue = jStat.normal.cdf(z, 0, 1);
+            }
+            
+            const reject = pValue < alpha;
+            
+            // Display results
+            const resultsDiv = document.getElementById('prop-results');
+            resultsDiv.innerHTML = `
+                <div class="result-item">
+                    <h3>Verificación de Condiciones</h3>
+                    <div>np₀ = ${np0.toFixed(2)} ${np0 >= 5 ? '✓' : '✗'}</div>
+                    <div>n(1-p₀) = ${n1p0.toFixed(2)} ${n1p0 >= 5 ? '✓' : '✗'}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Hipótesis</h3>
+                    <div>H₀: p ${tail === 'two' ? '=' : tail === 'right' ? '≤' : '≥'} ${p0}</div>
+                    <div>H₁: p ${tail === 'two' ? '≠' : tail === 'right' ? '>' : '<'} ${p0}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Estadístico de Prueba</h3>
+                    <div class="result-value">Z = ${z.toFixed(4)}</div>
+                    <div>Error estándar: ${se.toFixed(6)}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valores Críticos</h3>
+                    <div class="result-value">Z crítico = ${criticalValues}</div>
+                </div>
+                <div class="result-item">
+                    <h3>Valor p</h3>
+                    <div class="result-value">${pValue.toFixed(6)}</div>
+                </div>
+                <div class="decision ${reject ? 'reject' : 'no-reject'}">
+                    <strong>${reject ? '⚠️ RECHAZAR H₀' : '✓ NO RECHAZAR H₀'}</strong><br>
+                    ${reject ? 
+                        'Hay evidencia estadística significativa para rechazar la hipótesis nula.' : 
+                        'No hay suficiente evidencia para rechazar la hipótesis nula.'}
+                </div>
+            `;
+            resultsDiv.classList.add('show');
+            
+            // Plot the distribution
+            plotDistribution('prop-plot', z, alpha, tail, 'normal');
+        }
+        
+        function plotDistribution(divId, statistic, alpha, tail, type, df = null) {
+            const x = [];
+            const y = [];
+            const range = 5;
+            
+            for (let i = -range; i <= range; i += 0.1) {
+                x.push(i);
+                if (type === 'normal') {
+                    y.push(jStat.normal.pdf(i, 0, 1));
+                } else if (type === 't' && df !== null) {
+                    y.push(jStat.studentt.pdf(i, df));
+                }
+            }
+            
+            // Create main distribution trace
+            const mainTrace = {
+                x: x,
+                y: y,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Distribución',
+                line: { color: '#667eea', width: 3 }
+            };
+            
+            // Create critical region traces
+            const traces = [mainTrace];
+            
+            let criticalLeft, criticalRight;
+            if (tail === 'two') {
+                if (type === 'normal') {
+                    criticalRight = jStat.normal.inv(1 - alpha/2, 0, 1);
+                } else {
+                    criticalRight = jStat.studentt.inv(1 - alpha/2, df);
+                }
+                criticalLeft = -criticalRight;
+                
+                // Left critical region
+                const xLeft = x.filter(xi => xi <= criticalLeft);
+                const yLeft = xLeft.map(xi => type === 'normal' ? 
+                    jStat.normal.pdf(xi, 0, 1) : jStat.studentt.pdf(xi, df));
+                traces.push({
+                    x: xLeft,
+                    y: yLeft,
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    name: 'Región crítica',
+                    line: { color: '#f5576c' },
+                    fillcolor: 'rgba(245, 87, 108, 0.3)'
+                });
+                
+                // Right critical region
+                const xRight = x.filter(xi => xi >= criticalRight);
+                const yRight = xRight.map(xi => type === 'normal' ? 
+                    jStat.normal.pdf(xi, 0, 1) : jStat.studentt.pdf(xi, df));
+                traces.push({
+                    x: xRight,
+                    y: yRight,
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    name: 'Región crítica',
+                    line: { color: '#f5576c' },
+                    fillcolor: 'rgba(245, 87, 108, 0.3)',
+                    showlegend: false
+                });
+            } else if (tail === 'right') {
+                if (type === 'normal') {
+                    criticalRight = jStat.normal.inv(1 - alpha, 0, 1);
+                } else {
+                    criticalRight = jStat.studentt.inv(1 - alpha, df);
+                }
+                
+                const xRight = x.filter(xi => xi >= criticalRight);
+                const yRight = xRight.map(xi => type === 'normal' ? 
+                    jStat.normal.pdf(xi, 0, 1) : jStat.studentt.pdf(xi, df));
+                traces.push({
+                    x: xRight,
+                    y: yRight,
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    name: 'Región crítica',
+                    line: { color: '#f5576c' },
+                    fillcolor: 'rgba(245, 87, 108, 0.3)'
+                });
+            } else {
+                if (type === 'normal') {
+                    criticalLeft = jStat.normal.inv(alpha, 0, 1);
+                } else {
+                    criticalLeft = jStat.studentt.inv(alpha, df);
+                }
+                
+                const xLeft = x.filter(xi => xi <= criticalLeft);
+                const yLeft = xLeft.map(xi => type === 'normal' ? 
+                    jStat.normal.pdf(xi, 0, 1) : jStat.studentt.pdf(xi, df));
+                traces.push({
+                    x: xLeft,
+                    y: yLeft,
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    name: 'Región crítica',
+                    line: { color: '#f5576c' },
+                    fillcolor: 'rgba(245, 87, 108, 0.3)'
+                });
+            }
+            
+            // Add test statistic marker
+            const yStatistic = type === 'normal' ? 
+                jStat.normal.pdf(statistic, 0, 1) : jStat.studentt.pdf(statistic, df);
+            traces.push({
+                x: [statistic],
+                y: [yStatistic],
+                type: 'scatter',
+                mode: 'markers',
+                name: 'Estadístico observado',
+                marker: { 
+                    color: '#764ba2', 
+                    size: 12,
+                    symbol: 'diamond'
+                }
+            });
+            
+            // Add vertical line for test statistic
+            traces.push({
+                x: [statistic, statistic],
+                y: [0, yStatistic],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Estadístico',
+                line: { 
+                    color: '#764ba2', 
+                    width: 2,
+                    dash: 'dash'
+                },
+                showlegend: false
+            });
+            
+            const layout = {
+                title: {
+                    text: `Distribución ${type === 'normal' ? 'Normal Estándar' : 't de Student'}`,
+                    font: { size: 18 }
+                },
+                xaxis: { 
+                    title: type === 'normal' ? 'Z' : 't',
+                    zeroline: true,
+                    zerolinewidth: 2,
+                    zerolinecolor: '#969696'
+                },
+                yaxis: { 
+                    title: 'Densidad de Probabilidad',
+                    showgrid: true
+                },
+                shapes: [],
+                annotations: [],
+                showlegend: true,
+                legend: {
+                    x: 1,
+                    y: 1,
+                    xanchor: 'right',
+                    yanchor: 'top'
+                },
+                hovermode: 'x unified'
+            };
+            
+            // Add annotations for critical values
+            if (tail === 'two') {
+                layout.annotations.push(
+                    {
+                        x: criticalLeft,
+                        y: 0,
+                        xref: 'x',
+                        yref: 'y',
+                        text: `${criticalLeft.toFixed(2)}`,
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: -30,
+                        ay: -30,
+                        font: { color: '#f5576c' }
+                    },
+                    {
+                        x: criticalRight,
+                        y: 0,
+                        xref: 'x',
+                        yref: 'y',
+                        text: `${criticalRight.toFixed(2)}`,
+                        showarrow: true,
+                        arrowhead: 2,
+                        ax: 30,
+                        ay: -30,
+                        font: { color: '#f5576c' }
+                    }
+                );
+            } else if (tail === 'right') {
+                layout.annotations.push({
+                    x: criticalRight,
+                    y: 0,
+                    xref: 'x',
+                    yref: 'y',
+                    text: `${criticalRight.toFixed(2)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: 30,
+                    ay: -30,
+                    font: { color: '#f5576c' }
+                });
+            } else {
+                layout.annotations.push({
+                    x: criticalLeft,
+                    y: 0,
+                    xref: 'x',
+                    yref: 'y',
+                    text: `${criticalLeft.toFixed(2)}`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    ax: -30,
+                    ay: -30,
+                    font: { color: '#f5576c' }
+                });
+            }
+            
+            // Add annotation for test statistic
+            layout.annotations.push({
+                x: statistic,
+                y: yStatistic,
+                xref: 'x',
+                yref: 'y',
+                text: `${type === 'normal' ? 'Z' : 't'} = ${statistic.toFixed(3)}`,
+                showarrow: true,
+                arrowhead: 2,
+                ax: statistic > 0 ? -40 : 40,
+                ay: -40,
+                font: { 
+                    color: '#764ba2',
+                    size: 12,
+                    family: 'Arial Black'
+                },
+                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                bordercolor: '#764ba2',
+                borderwidth: 2
+            });
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'select2d', 'lasso2d', 'resetScale2d'],
+                displaylogo: false
+            };
+            
+            Plotly.newPlot(divId, traces, layout, config);
+        }
+        
+        // Initialize with example values when page loads
+        window.onload = function() {
+            // You can auto-calculate the first example if desired
+            // calculateZ();
+        };
+    </script>
+</body>
+</html>
+            
